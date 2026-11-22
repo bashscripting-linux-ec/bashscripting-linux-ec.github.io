@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bash Scripting en Linux</title>
+<meta name="description" content="Bash Scripting en Linux: ejemplos explicados de menús y bucles, listos para copiar o descargar.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#170b1f;--bg2:#0e0713;--panel:#0d0811;--card:rgba(255,255,255,.045);
+  --ink:#f6f0f9;--soft:#c5b8cf;--line:rgba(255,255,255,.11);
+  --naranja:#ff7a45;--rosa:#ff4f8b;--menta:#6ee7b7;--amarillo:#ffd479;--lila:#c4a1ff;
+  --mono:"Ubuntu Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box;min-width:0}
+html{background:var(--bg2);scroll-behavior:smooth;scroll-padding-top:84px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;color:var(--ink);font:17px/1.6 Ubuntu,system-ui,sans-serif;overflow-x:clip}
+.fondo{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(800px 520px at 88% -8%,rgba(255,122,69,.42),transparent 62%),
+    radial-gradient(640px 480px at 62% 8%,rgba(255,79,139,.20),transparent 60%),
+    radial-gradient(760px 560px at -12% 42%,rgba(110,231,183,.13),transparent 62%),
+    radial-gradient(860px 640px at 112% 88%,rgba(196,161,255,.18),transparent 62%),
+    linear-gradient(180deg,var(--bg),var(--bg2))}
+.fondo::after{content:"";position:absolute;inset:0;opacity:.55;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1.4px);background-size:26px 26px;
+  mask-image:linear-gradient(180deg,#000 0%,rgba(0,0,0,.35) 60%,transparent 100%)}
+.cont{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 max(4vw,16px)}
+a{color:var(--menta)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--naranja);outline-offset:2px;border-radius:8px}
+h1,h2,h3{line-height:1.08;text-wrap:balance;margin:0}
+code{font-family:var(--mono)}
+
+/* barra superior */
+.barra{position:sticky;top:0;z-index:5;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(14,7,19,.55);border-bottom:1px solid var(--line)}
+.barra .cont{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px}
+.marca{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;color:var(--ink);text-decoration:none}
+.marca span{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--naranja),var(--rosa));color:#1a0b14;font:700 17px var(--mono)}
+.barra ul{display:flex;flex-wrap:wrap;gap:4px;list-style:none;margin:0;padding:0}
+.barra ul a{display:inline-block;padding:9px 14px;border-radius:999px;color:var(--soft);text-decoration:none;font-weight:500;font-size:15px}
+.barra ul a:hover{color:var(--ink);background:rgba(255,255,255,.08)}
+@media(max-width:900px){.barra{position:relative}}
+
+/* portada */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);gap:44px;align-items:center;padding:clamp(40px,7vw,96px) 0 clamp(30px,5vw,56px)}
+.insignia{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:14px;color:var(--soft);margin-bottom:20px}
+.insignia b{width:8px;height:8px;border-radius:50%;background:var(--menta);box-shadow:0 0 12px var(--menta)}
+.hero h1{font-size:clamp(42px,6.4vw,72px);letter-spacing:-.015em}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--naranja),var(--rosa));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{color:var(--soft);font-size:19px;margin:20px 0 28px;max-width:33em}
+.acciones{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 22px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;border:0;cursor:pointer;font-family:inherit}
+.btn.pri{background:linear-gradient(135deg,var(--naranja),var(--rosa));color:#1a0b14;box-shadow:0 10px 30px rgba(255,90,90,.3)}
+.btn.sec{background:rgba(255,255,255,.07);color:var(--ink);border:1px solid var(--line)}
+.btn:hover{filter:brightness(1.08)}
+
+/* terminal */
+.term{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.term-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--line)}
+.term-bar i{width:12px;height:12px;border-radius:50%;display:block;flex:none}
+.term-bar i:nth-child(1){background:#ff5f57}.term-bar i:nth-child(2){background:#febc2e}.term-bar i:nth-child(3){background:#28c840}
+.term-bar b{flex:1;font:500 14px var(--mono);color:var(--soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;padding-right:44px}
+.term pre{margin:0;padding:16px 18px;font:16px/1.5 var(--mono);color:#ebe4f0;overflow-x:auto;white-space:pre}
+.hero-term{position:relative}
+.hero-term::before{content:"";position:absolute;inset:-30px;border-radius:40px;background:radial-gradient(closest-side,rgba(255,122,69,.35),transparent);filter:blur(20px);z-index:-1}
+.hero-term pre{font-size:clamp(14px,1.6vw,17px);padding:20px 22px;min-height:calc(13 * 1.5em + 40px)}
+.p{color:var(--menta);font-weight:700}.cmd{color:#fff;font-weight:700}.in{color:var(--amarillo);font-weight:700}
+.cursor{display:inline-block;width:.6em;height:1.1em;background:var(--menta);vertical-align:-.2em;animation:par 1s steps(1) infinite}
+@keyframes par{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+
+/* cifras */
+.cifras{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 clamp(44px,6vw,80px);padding:0;list-style:none}
+.cifras li{padding:16px 18px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.cifras b{display:block;font-size:30px;line-height:1.1;background:linear-gradient(90deg,var(--naranja),var(--rosa));-webkit-background-clip:text;background-clip:text;color:transparent}
+.cifras span{color:var(--soft);font-size:15px}
+
+/* secciones */
+section{padding:clamp(24px,4vw,44px) 0}
+.sec-cab{display:flex;gap:16px;align-items:flex-start;margin-bottom:26px}
+.icono{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,rgba(255,122,69,.25),rgba(255,79,139,.18));border:1px solid rgba(255,122,69,.35)}
+.icono svg{width:26px;height:26px}
+.sec-cab h2{font-size:clamp(30px,4vw,44px)}
+.sec-cab p{color:var(--soft);margin:8px 0 0;max-width:46em}
+
+/* anatomía */
+.anat{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+.anat .term pre{padding:16px 0}
+.ln{display:flex;align-items:center;gap:12px;padding:0 18px;min-height:1.5em}
+.ln code{flex:1;white-space:pre}
+.num{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;font:700 13px Ubuntu,sans-serif;color:#1a0b14}
+.leyenda{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.leyenda li{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.leyenda strong{display:block;font-size:17px}
+.leyenda span.t{color:var(--soft);font-size:15px}
+
+/* pasos */
+.pasos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.paso{position:relative;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.paso h3{font-size:19px;margin-bottom:6px}
+.paso p{margin:0 0 12px;color:var(--soft);font-size:15px}
+.paso code{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:17px;color:var(--amarillo)}
+.paso .n{position:absolute;top:16px;right:18px;font:700 40px/1 var(--mono);color:rgba(255,255,255,.08)}
+
+/* ejemplos */
+.ejemplo{position:relative;border-radius:20px;padding:clamp(18px,2.4vw,28px);margin-bottom:22px;
+  background:linear-gradient(rgba(27,15,35,.94),rgba(19,10,25,.94)) padding-box,linear-gradient(135deg,rgba(255,122,69,.45),rgba(255,255,255,.06) 40%,rgba(196,161,255,.35)) border-box;
+  border:1px solid transparent;backdrop-filter:blur(6px)}
+.ej-cab{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ej-cab h3{font-size:24px}
+.chip-arch{font:700 15px var(--mono);color:var(--menta);padding:4px 12px;border-radius:999px;background:rgba(110,231,183,.1);border:1px solid rgba(110,231,183,.25)}
+.nuevo{font:700 13px Ubuntu,sans-serif;color:#1a0b14;background:var(--amarillo);padding:3px 10px;border-radius:999px;margin-left:8px;vertical-align:4px}
+.ej-desc{color:var(--soft);margin:0 0 12px;max-width:54em}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 18px;padding:0;list-style:none}
+.tags li{font:14px var(--mono);padding:3px 10px;border-radius:999px;background:rgba(196,161,255,.12);color:var(--lila)}
+.ej-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+.ej-grid.solo{grid-template-columns:minmax(0,1fr)}
+.etq{font-size:14px;color:var(--soft);margin:0 0 8px;font-weight:500}
+.cod .term-bar b{text-align:left;padding-right:0}
+.cod-acc{display:flex;gap:8px;margin-left:auto}
+.cod-acc button,.cod-acc a{min-height:34px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);font:500 14px Ubuntu,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.cod-acc a{background:linear-gradient(135deg,var(--naranja),var(--rosa));border:0;color:#1a0b14;font-weight:700}
+.k{color:var(--naranja);font-weight:700}.s{color:var(--amarillo)}.v{color:var(--menta)}.c{color:#8f8199;font-style:italic}
+
+/* comandos */
+.comandos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;list-style:none;margin:0;padding:0}
+.comandos li{padding:16px 18px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
+.comandos code{display:block;font-size:19px;font-weight:700;color:var(--amarillo);margin-bottom:4px}
+.comandos span{color:var(--soft);font-size:15px}
+
+footer{border-top:1px solid var(--line);margin-top:48px;padding:28px 0 44px;color:var(--soft);font-size:15px;display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between}
+
+@media(max-width:960px){.hero-term::before{inset:-24px 0}.hero,.anat{grid-template-columns:minmax(0,1fr)}.ej-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){.pasos{grid-template-columns:minmax(0,1fr)}.cifras{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){body{font-size:16px}.lead{font-size:17px}.term pre{font-size:14px}.ej-cab h3{font-size:21px}.sec-cab{gap:12px}.icono{width:44px;height:44px}}
+</style>
+</head>
+<body>
+<div class="fondo" aria-hidden="true"></div>
+
+<header class="barra">
+  <div class="cont">
+    <a class="marca" href="#inicio"><span>$_</span>Bash Scripting</a>
+    <nav aria-label="Secciones"><ul>
+      <li><a href="#anatomia">Anatomía</a></li>
+      <li><a href="#menus">Menús</a></li>
+      <li><a href="#bucles">Bucles</a></li>
+      <li><a href="#comandos">Comandos</a></li>
+    </ul></nav>
+  </div>
+</header>
+
+<div class="cont">
+  <div class="hero" id="inicio">
+    <div>
+      <div class="insignia"><b></b>Guía práctica de la terminal de Linux</div>
+      <h1>Bash Scripting en <em>Linux</em></h1>
+      <p class="lead">Aprende a automatizar tu sistema con scripts reales: menús interactivos y bucles <code>for</code>, <code>while</code> y <code>until</code>, explicados línea a línea y listos para descargar.</p>
+      <div class="acciones">
+        <a class="btn pri" href="#menus">Ver ejemplos de menús</a>
+        <a class="btn sec" href="#bucles">Ver ejemplos de bucles</a>
+      </div>
+    </div>
+    <div class="hero-term">
+      <div class="term" role="img" aria-label="Terminal de Linux ejecutando un script de menú con cinco opciones">
+        <div class="term-bar"><i></i><i></i><i></i><b>alumno@linux: ~</b></div>
+        <pre id="demo"></pre>
+      </div>
+    </div>
+  </div>
+
+  <ul class="cifras" aria-label="Contenido">
+    <li><b>8</b><span>scripts de ejemplo</span></li>
+    <li><b>3</b><span>formas de hacer menús</span></li>
+    <li><b>4</b><span>tipos de bucles</span></li>
+    <li><b>100%</b><span>probados en Bash</span></li>
+  </ul>
+
+  <section id="anatomia">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg></div>
+      <div><h2>Anatomía de un script</h2><p>Un script de Bash es un archivo de texto con órdenes que Linux ejecuta de arriba hacia abajo. Estas son sus partes.</p></div>
+    </div>
+    <div class="anat">
+      <div class="term"><div class="term-bar"><i></i><i></i><i></i><b>mi_script.sh</b></div>
+        <pre id="anat-cod"></pre></div>
+      <ul class="leyenda" id="anat-ley"></ul>
+    </div>
+  </section>
+
+  <section id="ejecutar">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7l5 5-5 5M12 17h7"/></svg></div>
+      <div><h2>Cómo ejecutar un script</h2><p>Tres pasos y tu script está funcionando.</p></div>
+    </div>
+    <div class="pasos">
+      <div class="paso"><span class="n">1</span><h3>Crea el archivo</h3><p>Escribe o pega el script en un editor de texto.</p><code>nano menu.sh</code></div>
+      <div class="paso"><span class="n">2</span><h3>Dale permiso</h3><p>Permite que el archivo se pueda ejecutar.</p><code>chmod +x menu.sh</code></div>
+      <div class="paso"><span class="n">3</span><h3>Ejecútalo</h3><p>Lánzalo desde la carpeta donde está.</p><code>./menu.sh</code></div>
+    </div>
+  </section>
+
+  <section id="basico">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/></svg></div>
+      <div><h2>Primeros pasos</h2><p>Variables, lectura de datos y decisiones con <code>if</code>: la base de cualquier script.</p></div>
+    </div>
+    <div data-grupo="basico"></div>
+  </section>
+
+  <section id="menus">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h10M7 17h6"/></svg></div>
+      <div><h2>Ejemplos de menús</h2><p>Un menú muestra opciones, lee la elección del usuario y ejecuta la acción que corresponde. Tres formas de hacerlo, de la más clásica a la más completa.</p></div>
+    </div>
+    <div id="menus-subidos"></div>
+    <div data-grupo="menu"></div>
+  </section>
+
+  <section id="bucles">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></svg></div>
+      <div><h2>Ejemplos de bucles</h2><p>Los bucles repiten órdenes: <code>for</code> recorre una lista, <code>while</code> repite mientras algo sea cierto y <code>until</code> repite hasta que lo sea.</p></div>
+    </div>
+    <div data-grupo="bucle"></div>
+  </section>
+
+  <section id="comandos">
+    <div class="sec-cab">
+      <div class="icono"><svg viewBox="0 0 24 24" fill="none" stroke="#ff7a45" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></div>
+      <div><h2>Comandos usados en los ejemplos</h2><p>Una chuleta rápida para recordar qué hace cada uno.</p></div>
+    </div>
+    <ul class="comandos">
+      <li><code>date</code><span>Muestra la fecha y la hora.</span></li>
+      <li><code>df -h</code><span>Espacio libre en los discos.</span></li>
+      <li><code>free -h</code><span>Memoria RAM usada y libre.</span></li>
+      <li><code>who</code><span>Usuarios conectados.</span></li>
+      <li><code>ps aux</code><span>Procesos en ejecución.</span></li>
+      <li><code>find</code><span>Busca archivos por nombre.</span></li>
+      <li><code>tar -czf</code><span>Crea un archivo comprimido.</span></li>
+      <li><code>wc -l</code><span>Cuenta las líneas de un archivo.</span></li>
+      <li><code>sleep</code><span>Espera unos segundos.</span></li>
+      <li><code>chmod +x</code><span>Da permiso de ejecución.</span></li>
+    </ul>
+  </section>
+
+  <footer><span><strong style="color:var(--ink)">Bash Scripting en Linux</strong> · Ejemplos probados en Bash 5</span><span>Los usuarios y fechas de las salidas son de ejemplo.</span></footer>
+</div>
+
+<script>
+{
+const EJ = [{"grupo": "basico", "archivo": "saludo.sh", "titulo": "Saludo con variables e if", "desc": "Pide datos al usuario con read, los guarda en variables y decide qué mostrar con un if.", "tags": ["read -p", "variables", "$(date)", "if / else"], "salida": "alumno@linux:~$ ./saludo.sh\n¿Cómo te llamas? Ana\n¿Cuántos años tienes? 20\nHola, Ana. Hoy es 22/11/2026.\nEres mayor de edad.", "codigo": "#!/bin/bash\n# saludo.sh - Variables, lectura de datos y condicional if\n\nread -p \"¿Cómo te llamas? \" nombre\nread -p \"¿Cuántos años tienes? \" edad\n\necho \"Hola, $nombre. Hoy es $(date +%d/%m/%Y).\"\n\nif [ \"$edad\" -ge 18 ]; then\n  echo \"Eres mayor de edad.\"\nelse\n  echo \"Eres menor de edad.\"\nfi\n"}, {"grupo": "menu", "archivo": "menu.sh", "titulo": "Menú clásico con case", "desc": "Un bucle infinito muestra las opciones, lee la elección y la resuelve con case. La opción 5 termina el script con exit.", "tags": ["while true", "case", "clear", "exit"], "salida": "==============================\n     MENÚ DE HERRAMIENTAS\n==============================\n1) Ver fecha y hora\n2) Espacio en disco\n3) Usuarios conectados\n4) Memoria RAM\n5) Salir\n------------------------------\nElige una opción [1-5]: 2\nS.ficheros     Tamaño Usados  Disp Uso% Montado en\n/dev/sda2         98G    31G   62G  34% /\nPulsa Enter para continuar...", "codigo": "#!/bin/bash\n# menu.sh - Menú de herramientas del sistema\n\nwhile true; do\n  clear\n  echo \"==============================\"\n  echo \"     MENÚ DE HERRAMIENTAS\"\n  echo \"==============================\"\n  echo \"1) Ver fecha y hora\"\n  echo \"2) Espacio en disco\"\n  echo \"3) Usuarios conectados\"\n  echo \"4) Memoria RAM\"\n  echo \"5) Salir\"\n  echo \"------------------------------\"\n  read -p \"Elige una opción [1-5]: \" opcion\n\n  case $opcion in\n    1) date ;;\n    2) df -h / ;;\n    3) who ;;\n    4) free -h ;;\n    5) echo \"¡Hasta luego!\"; exit 0 ;;\n    *) echo \"Opción no válida\" ;;\n  esac\n  read -p \"Pulsa Enter para continuar...\"\ndone\n"}, {"grupo": "menu", "archivo": "distros.sh", "titulo": "Menú automático con select", "desc": "select numera las opciones por ti y repite la pregunta hasta que elijas Salir. PS3 define el texto de la pregunta y $REPLY guarda el número escrito.", "tags": ["select", "PS3", "arreglos", "$REPLY"], "salida": "alumno@linux:~$ ./distros.sh\n1) Ubuntu\n2) Debian\n3) Fedora\n4) Arch Linux\n5) Salir\nElige una distribución: 2\nElegiste Debian (opción 2)\nElige una distribución: 7\nNúmero no válido\nElige una distribución: 5\nAdiós", "codigo": "#!/bin/bash\n# distros.sh - Menú automático con select\n\nPS3=\"Elige una distribución: \"\nopciones=(\"Ubuntu\" \"Debian\" \"Fedora\" \"Arch Linux\" \"Salir\")\n\nselect distro in \"${opciones[@]}\"; do\n  case $distro in\n    \"Salir\") echo \"Adiós\"; break ;;\n    \"\")      echo \"Número no válido\" ;;\n    *)       echo \"Elegiste $distro (opción $REPLY)\" ;;\n  esac\ndone\n"}, {"grupo": "menu", "archivo": "admin.sh", "titulo": "Menú de administración con funciones", "desc": "Cada opción llama a una función: crear un respaldo comprimido con tar, ver los procesos que más CPU usan o buscar archivos con find.", "tags": ["funciones", "local", "tar", "find", "ps"], "salida": "alumno@linux:~$ ./admin.sh\n\n1) Crear respaldo de Documentos\n2) Ver procesos que más CPU usan\n3) Buscar un archivo\n4) Salir\nOpción: 1\nRespaldo creado: /home/alumno/respaldo_20261122.tar.gz\n\n1) Crear respaldo de Documentos\n2) Ver procesos que más CPU usan\n3) Buscar un archivo\n4) Salir\nOpción: 4\nSaliendo...", "codigo": "#!/bin/bash\n# admin.sh - Menú de administración con funciones\n\nrespaldo() {\n  local origen=\"$HOME/Documentos\"\n  local destino=\"$HOME/respaldo_$(date +%Y%m%d).tar.gz\"\n  tar -czf \"$destino\" -C \"$HOME\" Documentos && echo \"Respaldo creado: $destino\"\n}\n\nprocesos() {\n  ps aux --sort=-%cpu | head -n 6\n}\n\nbuscar_archivo() {\n  read -p \"Nombre a buscar: \" nombre\n  find \"$HOME\" -iname \"*$nombre*\" 2>/dev/null\n}\n\nwhile true; do\n  echo\n  echo \"1) Crear respaldo de Documentos\"\n  echo \"2) Ver procesos que más CPU usan\"\n  echo \"3) Buscar un archivo\"\n  echo \"4) Salir\"\n  read -p \"Opción: \" op\n  case $op in\n    1) respaldo ;;\n    2) procesos ;;\n    3) buscar_archivo ;;\n    4) echo \"Saliendo...\"; break ;;\n    *) echo \"Opción no válida\" ;;\n  esac\ndone\n"}, {"grupo": "bucle", "archivo": "tabla.sh", "titulo": "Tabla de multiplicar con for", "desc": "El bucle for recorre del 1 al 10 con {1..10} y $(( )) hace la multiplicación.", "tags": ["for", "{1..10}", "$(( ))"], "salida": "alumno@linux:~$ ./tabla.sh\n¿Qué tabla quieres ver? 7\n7 x 1 = 7\n7 x 2 = 14\n7 x 3 = 21\n7 x 4 = 28\n7 x 5 = 35\n7 x 6 = 42\n7 x 7 = 49\n7 x 8 = 56\n7 x 9 = 63\n7 x 10 = 70", "codigo": "#!/bin/bash\n# tabla.sh - Tabla de multiplicar con un bucle for\n\nread -p \"¿Qué tabla quieres ver? \" n\n\nfor i in {1..10}; do\n  echo \"$n x $i = $(( n * i ))\"\ndone\n"}, {"grupo": "bucle", "archivo": "contar_lineas.sh", "titulo": "Recorrer archivos con for", "desc": "for también recorre archivos: *.txt se expande a todos los .txt de la carpeta y wc -l cuenta sus líneas.", "tags": ["for", "*.txt", "wc -l", "break"], "salida": "alumno@linux:~$ ls\nnotas.txt  tareas.txt  contar_lineas.sh\nalumno@linux:~$ ./contar_lineas.sh\nnotas.txt tiene 3 líneas\ntareas.txt tiene 12 líneas", "codigo": "#!/bin/bash\n# contar_lineas.sh - Recorre los archivos .txt y cuenta sus líneas\n\nfor archivo in *.txt; do\n  if [ ! -e \"$archivo\" ]; then\n    echo \"No hay archivos .txt en esta carpeta\"\n    break\n  fi\n  lineas=$(wc -l < \"$archivo\")\n  echo \"$archivo tiene $lineas líneas\"\ndone\n"}, {"grupo": "bucle", "archivo": "usuarios.sh", "titulo": "Leer un archivo línea por línea con while", "desc": "while read lee /etc/passwd línea a línea. IFS=: separa los campos por los dos puntos y el if filtra los usuarios normales.", "tags": ["while read", "IFS", "/etc/passwd", "&&"], "salida": "alumno@linux:~$ ./usuarios.sh\nUsuarios del sistema:\n  alumno -> /home/alumno (/bin/bash)\n  maria -> /home/maria (/bin/bash)", "codigo": "#!/bin/bash\n# usuarios.sh - Lee /etc/passwd línea por línea con while\n\necho \"Usuarios del sistema:\"\n\nwhile IFS=: read -r usuario _ uid _ _ home shell; do\n  if [ \"$uid\" -ge 1000 ] && [ \"$uid\" -lt 65534 ]; then\n    echo \"  $usuario -> $home ($shell)\"\n  fi\ndone < /etc/passwd\n"}, {"grupo": "bucle", "archivo": "cuenta_regresiva.sh", "titulo": "Cuenta regresiva con until", "desc": "until repite mientras la condición sea falsa, al revés que while. sleep 1 espera un segundo entre vueltas.", "tags": ["until", "sleep", "((x--))"], "salida": "alumno@linux:~$ ./cuenta_regresiva.sh\nFaltan 5 segundos...\nFaltan 4 segundos...\nFaltan 3 segundos...\nFaltan 2 segundos...\nFaltan 1 segundos...\n¡Tiempo cumplido!", "codigo": "#!/bin/bash\n# cuenta_regresiva.sh - Bucle until\n\nsegundos=5\n\nuntil [ \"$segundos\" -eq 0 ]; do\n  echo \"Faltan $segundos segundos...\"\n  sleep 1\n  ((segundos--))\ndone\n\necho \"¡Tiempo cumplido!\"\n"}];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const reducir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Resaltado sencillo de Bash
+const RE = /(#[^\n]*)|("(?:[^"\\]|\\.)*"|'[^'\n]*')|(\$\{[^}]*\}|\$\(\(|\$\(|\$[A-Za-z_][A-Za-z0-9_]*|\$\?)|\b(if|then|else|elif|fi|for|in|do|done|while|until|case|esac|select|local|break|exit|return|read|echo)\b/g;
+function hl(s){
+  let out = '', i = 0, m; RE.lastIndex = 0;
+  while ((m = RE.exec(s))){
+    out += esc(s.slice(i, m.index));
+    const cls = m[1] ? 'c' : m[2] ? 's' : m[3] ? 'v' : 'k';
+    out += `<span class="${cls}">${esc(m[0])}</span>`;
+    i = RE.lastIndex;
+  }
+  return out + esc(s.slice(i));
+}
+function salida(t){
+  return t.split('\n').map(l => {
+    if (l.startsWith('alumno@linux:~$ ')) return `<span class="p">alumno@linux:~$</span> <span class="cmd">${esc(l.slice(16))}</span>`;
+    const m = l.match(/^((?:¿.*\?|Elige.*:|Opción:)\s)(.+)$/);
+    if (m) return esc(m[1]) + `<span class="in">${esc(m[2])}</span>`;
+    return esc(l);
+  }).join('\n');
+}
+
+// Terminal animada de la portada
+{
+  const pre = document.getElementById('demo');
+  const cmd = './menu.sh';
+  const lineas = ['==============================','     MENÚ DE HERRAMIENTAS','==============================','1) Ver fecha y hora','2) Espacio en disco','3) Usuarios conectados','4) Memoria RAM','5) Salir','------------------------------'];
+  const prompt = '<span class="p">alumno@linux:~$</span> ';
+  const final = () => prompt + `<span class="cmd">${cmd}</span>\n` + lineas.map(esc).join('\n') + '\nElige una opción [1-5]: <span class="cursor"></span>';
+  if (reducir){ pre.innerHTML = final(); }
+  else {
+    let i = 0;
+    const tipear = () => {
+      pre.innerHTML = prompt + `<span class="cmd">${cmd.slice(0, i)}</span><span class="cursor"></span>`;
+      if (i++ < cmd.length) setTimeout(tipear, 110);
+      else setTimeout(() => mostrar(0), 350);
+    };
+    const mostrar = n => {
+      pre.innerHTML = prompt + `<span class="cmd">${cmd}</span>\n` + lineas.slice(0, n).map(esc).join('\n');
+      if (n < lineas.length) setTimeout(() => mostrar(n + 1), 90);
+      else pre.innerHTML = final();
+    };
+    setTimeout(tipear, 500);
+  }
+}
+
+// Anatomía
+{
+  const C = ['#ff7a45','#ff4f8b','#6ee7b7','#ffd479','#c4a1ff'];
+  const lin = [
+    ['#!/bin/bash', 1], ['# Mi primer script', 2], ['nombre="Linux"', 3],
+    ['read -p "Tu edad: " edad', 4], ['if [ "$edad" -ge 18 ]; then', 5],
+    ['  echo "Hola, $nombre"', 5], ['fi', 5]
+  ];
+  const ley = [
+    ['Shebang', 'Indica que el archivo se ejecuta con Bash. Siempre va en la primera línea.'],
+    ['Comentario', 'Todo lo que va después de # lo ignora Bash. Sirve para explicar el código.'],
+    ['Variable', 'Guarda un valor. Se escribe sin espacios alrededor del = y se lee con $nombre.'],
+    ['Entrada', 'read pide un dato al usuario y lo guarda en una variable.'],
+    ['Lógica', 'if, case y los bucles deciden qué se ejecuta y cuántas veces.']
+  ];
+  document.getElementById('anat-cod').innerHTML = lin.map(([t, n], i) =>
+    `<span class="ln"><code>${hl(t)}</code>${(i === 0 || lin[i-1][1] !== n) ? `<span class="num" style="background:${C[n-1]}">${n}</span>` : ''}</span>`).join('');
+  document.getElementById('anat-ley').innerHTML = ley.map(([t, d], i) =>
+    `<li><span class="num" style="background:${C[i]}">${i+1}</span><span><strong>${t}</strong><span class="t">${d}</span></span></li>`).join('');
+}
+
+// Tarjetas de ejemplos
+function tarjeta(e, nuevo){
+  return `
+    <article class="ejemplo" id="${esc(e.archivo.replace(/\.\w+$/, ''))}">
+      <div class="ej-cab"><h3>${esc(e.titulo)}${nuevo ? '<span class="nuevo">Nuevo</span>' : ''}</h3><span class="chip-arch">${esc(e.archivo)}</span></div>
+      <p class="ej-desc">${esc(e.desc)}</p>
+      ${e.tags && e.tags.length ? `<ul class="tags">${e.tags.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+      <div class="ej-grid${e.salida ? '' : ' solo'}">
+        <div>
+          <p class="etq">El script</p>
+          <div class="term cod">
+            <div class="term-bar"><i></i><i></i><i></i><b>${esc(e.archivo)}</b>
+              <span class="cod-acc"><button type="button" data-copiar>Copiar</button><a data-bajar ${e.url ? `href="${esc(e.url)}"` : 'href="#"'} download="${esc(e.archivo)}">Descargar</a></span></div>
+            <pre><code>${hl(e.codigo)}</code></pre>
+          </div>
+        </div>
+        ${e.salida ? `<div>
+          <p class="etq">Así se ve al ejecutarlo</p>
+          <div class="term"><div class="term-bar"><i></i><i></i><i></i><b>alumno@linux: ~</b></div><pre>${salida(e.salida)}</pre></div>
+        </div>` : ''}
+      </div>
+    </article>`;
+}
+function activar(cont, lista){
+  cont.querySelectorAll('.ejemplo').forEach((art, i) => {
+    const e = lista[i];
+    const a = art.querySelector('[data-bajar]');
+    if (!e.url) a.href = URL.createObjectURL(new Blob([e.codigo], {type:'text/x-shellscript'}));
+    art.querySelector('[data-copiar]').addEventListener('click', async ev => {
+      const b = ev.currentTarget;
+      try { await navigator.clipboard.writeText(e.codigo); b.textContent = 'Copiado'; }
+      catch(err){ b.textContent = 'Selecciona y copia'; }
+      setTimeout(() => b.textContent = 'Copiar', 1800);
+    });
+  });
+}
+for (const cont of document.querySelectorAll('[data-grupo]')){
+  const lista = EJ.filter(e => e.grupo === cont.dataset.grupo);
+  cont.innerHTML = lista.map(e => tarjeta(e)).join('');
+  activar(cont, lista);
+}
+
+// Menús subidos: cada script que pongas en la carpeta "menus" del repositorio aparece aquí, al inicio de la sección Menús.
+(async () => {
+  const CARPETA = 'menus';
+  if (!location.hostname.endsWith('github.io')) return;
+  const usuario = location.hostname.split('.')[0];
+  const partes = location.pathname.split('/').filter(Boolean);
+  const proyecto = partes[0] && !partes[0].includes('.');
+  const repo = proyecto ? partes[0] : location.hostname;
+  const base = proyecto ? '/' + repo + '/' : '/';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${usuario}/${repo}/contents/${CARPETA}`, {cache:'no-store'});
+    if (!r.ok) return;
+    const archivos = (await r.json()).filter(f => f.type === 'file' && /\.(sh|bash)$/i.test(f.name));
+    const lista = [];
+    for (const f of archivos){
+      const url = base + CARPETA + '/' + encodeURIComponent(f.name);
+      const codigo = await fetch(url, {cache:'no-store'}).then(x => x.ok ? x.text() : '').catch(() => '');
+      if (!codigo) continue;
+      const desc = (codigo.split('\n').find(l => /^#\s*\S/.test(l) && !l.startsWith('#!')) || '').replace(/^#\s*/, '');
+      lista.push({archivo: f.name, titulo: 'Menú: ' + f.name.replace(/\.(sh|bash)$/i, '').replace(/[_-]+/g, ' '), desc: desc || 'Script de menú en Bash listo para descargar y ejecutar.', tags: [], codigo, url});
+    }
+    if (!lista.length) return;
+    const cont = document.getElementById('menus-subidos');
+    cont.innerHTML = lista.map(e => tarjeta(e, true)).join('');
+    activar(cont, lista);
+  } catch(e){}
+})();
+}
+</script>
+</body>
+</html>
