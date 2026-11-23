@@ -127,6 +127,10 @@ section{padding:clamp(24px,4vw,44px) 0}
 .k{color:var(--naranja);font-weight:700}.s{color:var(--amarillo)}.v{color:var(--menta)}.c{color:#8f8199;font-style:italic}
 
 /* comandos */
+.subido{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:16px 20px;margin-bottom:22px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.subido .tam{color:var(--soft);font-size:15px}
+.subido .nuevo{margin-left:0;vertical-align:0}
+.subido .btn{margin-left:auto}
 .comandos{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;list-style:none;margin:0;padding:0}
 .comandos li{padding:16px 18px;border-radius:14px;background:var(--card);border:1px solid var(--line)}
 .comandos code{display:block;font-size:19px;font-weight:700;color:var(--amarillo);margin-bottom:4px}
@@ -381,18 +385,12 @@ for (const cont of document.querySelectorAll('[data-grupo]')){
       const r = await fetch(`https://api.github.com/repos/${usuario}/${repo}/contents/${carpeta}`, {cache:'no-store'});
       if (!r.ok) continue;
       const archivos = (await r.json()).filter(f => f.type === 'file' && /\.(sh|bash)$/i.test(f.name));
-      const lista = [];
-      for (const f of archivos){
+      if (!archivos.length) continue;
+      document.getElementById(destino).innerHTML = archivos.map(f => {
         const url = base + carpeta + '/' + encodeURIComponent(f.name);
-        const codigo = await fetch(url, {cache:'no-store'}).then(x => x.ok ? x.text() : '').catch(() => '');
-        if (!codigo) continue;
-        const desc = (codigo.split('\n').find(l => /^#\s*\S/.test(l) && !l.startsWith('#!')) || '').replace(/^#\s*/, '');
-        lista.push({archivo: f.name, titulo: prefijo + f.name.replace(/\.(sh|bash)$/i, '').replace(/[_-]+/g, ' '), desc: desc || 'Script de Bash listo para descargar y ejecutar.', tags: [], codigo, url});
-      }
-      if (!lista.length) continue;
-      const cont = document.getElementById(destino);
-      cont.innerHTML = lista.map(e => tarjeta(e, true)).join('');
-      activar(cont, lista);
+        return `<div class="subido"><span class="chip-arch">${esc(f.name)}</span>
+          <a class="btn pri" href="${esc(url)}" download="${esc(f.name)}">Descargar</a></div>`;
+      }).join('');
     } catch(e){}
   }
 })();
